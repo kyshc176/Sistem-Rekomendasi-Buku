@@ -10,8 +10,8 @@ Untuk mengatasi permasalahan ini, dibutuhkan sebuah sistem rekomendasi buku yang
 Untuk pengembangan model, proyek ini menggunakan data dari Book Recommendation Dataset. Dataset ini mencakup informasi pengguna anonim beserta data demografis serta penilaian mereka (baik eksplisit maupun implisit) terhadap berbagai buku. Data ini dikumpulkan selama empat minggu oleh komunitas Book-Crossing pada tahun 2004. Dengan memanfaatkan data tersebut, proyek ini bertujuan membangun sistem rekomendasi buku yang inovatif dan bermanfaat bagi pembaca, pelaku industri, serta mampu meningkatkan ekosistem literasi.
 
 ## Referensi
-https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3356349#
-https://www.researchgate.net/profile/Dhiman-Sarma/publication/348968927_Personalized_Book_Recommendation_System_using_Machine_Learning_Algorithm/links/606402eba6fdccbfea1a621e/Personalized-Book-Recommendation-System-using-Machine-Learning-Algorithm.pdf
+[Machine Learning Techniques for Book Recommendation](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3356349#)
+[Personalized Book Recommendation System using Machine Learning Algorithm](https://www.researchgate.net/profile/Dhiman-Sarma/publication/348968927_Personalized_Book_Recommendation_System_using_Machine_Learning_Algorithm/links/606402eba6fdccbfea1a621e/Personalized-Book-Recommendation-System-using-Machine-Learning-Algorithm.pdf)
 
 ## Business Understanding
 
