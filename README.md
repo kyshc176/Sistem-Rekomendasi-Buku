@@ -84,12 +84,15 @@ Penjelasan masing-masing file adalah sebagai berikut:
 # Dataset Books 
 
 <img width="1317" alt="Screenshot 2025-05-31 at 17 36 28" src="https://github.com/user-attachments/assets/941dbb29-4953-45b0-8c89-7a2f947b8092" />
+
 # Dataset Ratings
 
 <img width="275" alt="Screenshot 2025-05-31 at 17 36 33" src="https://github.com/user-attachments/assets/dcaac9bd-86bc-44c5-80fe-da26611468bc" />
+
 # Dataset Users
 
 <img width="346" alt="Screenshot 2025-05-31 at 17 36 37" src="https://github.com/user-attachments/assets/46edd881-d631-4be6-9bb8-05a14ca7a84b" />
+
 # Analisis 
 Berdasarkan output yang ditampilkan, diperoleh informasi struktur dari tiga variabel utama dalam dataset:
 
@@ -126,7 +129,9 @@ Setelah ditelusuri, terdapat dua nilai teks yang salah pada kolom tersebut yaitu
 
 Langkah berikutnya adalah membersihkan data dengan menghapus kolom yang tidak relevan dengan proses pengembangan model. Karena model yang akan dikembangkan adalah sistem rekomendasi berbasis konten (content-based filtering), maka atribut terkait gambar (Image-URL-S, Image-URL-M, Image-URL-L) tidak dibutuhkan dan dihapus. Hasil akhir dari dataset books yang telah dibersihkan ditampilkan pada Tabel 4.
 # Tampilan dataset books setelah pembersihan
+
 <img width="871" alt="Screenshot 2025-05-31 at 17 41 21" src="https://github.com/user-attachments/assets/82e55272-e1c8-4878-a74a-fccd858e767a" />
+
 # Analisis
 Setelah dilakukan pembersihan, dataset books memiliki lima kolom utama. Statistik terkait jumlah entri unik pada masing-masing kolom adalah:
 - Jumlah ISBN buku: 271.357
@@ -160,6 +165,7 @@ Variabel `users` berguna untuk sistem rekomendasi berbasis demografi. Namun, pad
 ### Data Preprocessing
 Berdasarkan hasil eksplorasi awal (data understanding), diketahui bahwa Book Recommendation Dataset terdiri dari tiga file terpisah, yaitu books, ratings, dan users. Pada tahap ini, ketiga file tersebut digabungkan menjadi satu dataset agar dapat digunakan untuk proses pengembangan model. Setelah proses penggabungan dilakukan, terbentuk dataset dengan 7 variabel dan total 1.149.780 baris data. Tabel 5 menampilkan cuplikan dari dataset hasil gabungan antara ratings dan books, yang nantinya akan digunakan sebagai dasar dalam pembuatan sistem rekomendasi.
 # Dataset Gabungan ratings dan books
+
 <img width="1051" alt="Screenshot 2025-05-31 at 17 46 35" src="https://github.com/user-attachments/assets/f28f218b-efe4-4c23-a5a0-68721ad3b030" />
 
 ## Data Preparation
@@ -176,6 +182,7 @@ Langkah pertama adalah memeriksa keberadaan missing value menggunakan perintah b
 Setelah menghapus missing value, langkah berikutnya adalah memastikan tidak ada satu ISBN yang digunakan oleh lebih dari satu judul buku. Hal ini penting agar model tidak salah mengenali buku yang sebenarnya berbeda namun memiliki ISBN yang sama. Setelah dilakukan pemeriksaan, ditemukan bahwa terdapat duplikasi ISBN pada beberapa judul buku. Untuk mengatasi hal ini, data dideduplikasi berdasarkan kolom ISBN, sehingga setiap ISBN hanya mewakili satu entri buku. Setelah proses ini, data tersisa sebanyak 270.145 baris.
 
 Langkah berikutnya adalah menyusun dictionary yang terdiri dari pasangan key-value untuk setiap ISBN, judul buku, penulis, tahun terbit, dan penerbit. Hasil akhir disimpan dalam variabel books_new. 
+
 <img width="933" alt="Screenshot 2025-05-31 at 17 49 02" src="https://github.com/user-attachments/assets/ca6c73d0-8412-40b7-82e9-a3e5f710f800" />
 
 # Persiapan Data untuk Model Collaborative Filtering
@@ -250,6 +257,7 @@ Fungsi `book_recommendations()` dikembangkan dengan parameter:
 
 **Contoh**:  
 Untuk buku _"Entering the Silence: Becoming a Monk and a Writer"_ karya **Thomas Merton**, sistem menghasilkan 5 rekomendasi buku lain dengan penulis yang sama.
+
 <img width="439" alt="Screenshot 2025-05-31 at 18 02 44" src="https://github.com/user-attachments/assets/bc1b8807-132f-4a5e-bfcd-1cd1d1098c5b" />
 
 ### Model Development dengan Collaborative Filtering
@@ -307,6 +315,7 @@ Langkah-langkah:
 
 **Contoh**:  
 Untuk user ID **276798**, sistem menghasilkan 10 rekomendasi buku teratas beserta informasi penulis yang disesuaikan dengan pola rating historis pengguna.
+
 <img width="492" alt="Screenshot 2025-05-31 at 18 04 15" src="https://github.com/user-attachments/assets/aa8e2b1b-f9d1-468a-88cb-1ada982112bf" />
 
 ## Evaluation
