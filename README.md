@@ -46,10 +46,10 @@ Dataset yang digunakan dalam proyek ini adalah Book Recommendation Dataset yang 
 Struktur Dataset
 [Book Recommendation Dataset](https://www.kaggle.com/datasets/arashnic/book-recommendation-dataset/data) terdiri dari tiga file dalam format CSV, yaitu:
 
-    ├── book-dataset                 <- nama folder utama.
-       ├── books.csv                 <- berisi informasi buku.
-       ├── ratings.csv               <- berisi informasi rating atau peringkat buku dari pengguna atau pembaca.
-       └── users.csv                 <- berisi informasi pengguna atau pembaca.
+    ├── book-dataset                 
+       ├── books.csv                 
+       ├── ratings.csv               
+       └── users.csv                 
 
 Penjelasan masing-masing file adalah sebagai berikut:
 - **`books.csv`**: Berisi 271.360 entri buku dengan 8 kolom: ISBN, Book-Title, Book-Author, Year-Of-Publication, Publisher, Image-URL-S, Image-URL-M, dan Image-URL-L.
