@@ -82,10 +82,13 @@ Penjelasan masing-masing file adalah sebagai berikut:
 
 ### Data Loading
 # Dataset Books 
+
 <img width="1317" alt="Screenshot 2025-05-31 at 17 36 28" src="https://github.com/user-attachments/assets/941dbb29-4953-45b0-8c89-7a2f947b8092" />
 # Dataset Ratings
+
 <img width="275" alt="Screenshot 2025-05-31 at 17 36 33" src="https://github.com/user-attachments/assets/dcaac9bd-86bc-44c5-80fe-da26611468bc" />
 # Dataset Users
+
 <img width="346" alt="Screenshot 2025-05-31 at 17 36 37" src="https://github.com/user-attachments/assets/46edd881-d631-4be6-9bb8-05a14ca7a84b" />
 # Analisis 
 Berdasarkan output yang ditampilkan, diperoleh informasi struktur dari tiga variabel utama dalam dataset:
@@ -316,6 +319,7 @@ Dalam proyek ini, evaluasi model content-based filtering dilakukan menggunakan t
 - **F1-Score** merupakan harmoni rata-rata dari Precision dan Recall, yang menunjukkan keseimbangan antara keduanya.
 
 Berikut rumus matematisnya:
+
 <img width="416" alt="Screenshot 2025-05-31 at 18 08 41" src="https://github.com/user-attachments/assets/41aff0fd-f12c-49ae-bbe1-29e7f4ee8a83" />
 
 Sebelum perhitungan metrik evaluasi dilakukan, diperlukan data acuan berupa **ground truth**, yang berfungsi sebagai label kebenaran untuk mengevaluasi prediksi model. Ground truth ini dibentuk berdasarkan nilai **cosine similarity** antar buku, di mana setiap pasangan buku diberi label 1 jika tingkat kemiripannya ≥ 0.5 (threshold) dan label 0 jika di bawahnya. Matriks ground truth kemudian dibentuk menggunakan fungsi `np.where()` dari NumPy dan diubah ke dalam bentuk DataFrame dengan judul buku sebagai indeks.
@@ -335,6 +339,7 @@ Nilai-nilai ini menunjukkan bahwa model mampu memberikan rekomendasi yang sangat
 ### Evaluasi Model Collaborative Filtering
 
 Untuk model collaborative filtering, metrik evaluasi yang digunakan adalah **Root Mean Squared Error (RMSE)**. Metrik ini umum digunakan dalam prediksi nilai kontinu dan sangat cocok untuk mengukur akurasi model dalam memprediksi rating pengguna terhadap item. Rumus RMSE sebagai berikut:
+
 <img width="289" alt="Screenshot 2025-05-31 at 18 09 41" src="https://github.com/user-attachments/assets/05afa919-162d-47fc-9a4b-e6d37090cec2" />
 
 
@@ -345,6 +350,7 @@ Keterangan:
 
 Berdasarkan proses pelatihan model yang telah dilakukan, performa model diukur menggunakan nilai RMSE pada data pelatihan dan validasi. Untuk memvisualisasikan proses ini, dibuat grafik evaluasi menggunakan pustaka **matplotlib**, seperti ditunjukkan pada :
 **Visualisasi metrik evaluasi RMSE**
+
 <img width="495" alt="Screenshot 2025-05-31 at 18 09 53" src="https://github.com/user-attachments/assets/0e261c6b-0225-4534-b49d-be2507a356e2" />
 
 Dari grafik tersebut, terlihat bahwa model mencapai titik konvergensi sekitar **epoch ke-50**, dengan tren nilai error yang menurun secara konsisten. Hasil akhir dari proses pelatihan menunjukkan bahwa:
