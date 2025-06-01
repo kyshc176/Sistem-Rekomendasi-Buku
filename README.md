@@ -173,9 +173,24 @@ Karena sistem rekomendasi akan dikembangkan menggunakan dua pendekatan, yaitu co
 
 ### Persiapan Data untuk Model Content-Based Filtering
 Dalam tahap ini, dilakukan sejumlah proses untuk menyiapkan data, di antaranya:
+- Mengkonversi Kolom year of publication ke integer dan menghapus Image URL semua ukuran 
 - Menghapus data yang memiliki missing value
 - Menyeragamkan jenis buku berdasarkan ISBN
 Pada metode content-based filtering, setiap nomor ISBN merepresentasikan satu judul buku, sehingga ISBN harus bersifat unik untuk mencegah terjadinya duplikasi dan bias data. Oleh karena itu, data perlu dipastikan sudah bersih dan siap digunakan dalam proses pelatihan model.
+### Mengkonversi Kolom year of publication ke integer
+Saat mencoba mengonversi kolom `Year-Of-Publication` ke tipe data integer, muncul error:
+Hal ini menunjukkan bahwa terdapat data yang seharusnya berupa tahun, namun justru berisi teks. Setelah ditelusuri, ditemukan **dua nilai tidak valid**, yaitu:
+- `'DK Publishing Inc'`
+- `'Gallimard'`
+Nilai-nilai ini merupakan **kesalahan input** dan perlu dihapus dari dataset agar tidak mengganggu proses konversi tipe data.
+#### Mengubah tipe data pada 'Year-Of-Publication'.
+
+<img width="236" alt="Screenshot 2025-06-01 at 16 37 36" src="https://github.com/user-attachments/assets/92d46a29-aaaa-4886-9974-6f71374e365c" />
+
+Setelah kolom `Year-Of-Publication` berhasil dikonversi ke tipe integer, selanjutnya dilakukan pembersihan data dengan menghapus kolom yang tidak relevan untuk pengembangan model rekomendasi berbasis konten. Karena sistem rekomendasi akan fokus pada informasi buku berupa **judul** dan **penulis**, maka kolom yang berisi URL gambar (`Image-URL-S`, `Image-URL-M`, `Image-URL-L`) tidak diperlukan dan dapat dihapus untuk menyederhanakan dataset serta mengurangi beban komputasi.
+
+<img width="740" alt="Screenshot 2025-06-01 at 16 38 23" src="https://github.com/user-attachments/assets/b282ab55-3e89-4c27-95bc-ad39cfdf4ff2" />
+
 ### Penanganan Missing Value
 Langkah pertama adalah memeriksa keberadaan missing value menggunakan perintah books.isnull().sum(). Hasilnya menunjukkan bahwa hanya fitur User-ID, ISBN, dan Book-Rating yang tidak memiliki missing value. Sebaliknya, fitur seperti Publisher memiliki missing value terbanyak, yaitu 118.650. Jumlah ini dinilai masih dapat ditoleransi (sekitar 10,3% dari total data), sehingga keputusan diambil untuk menghapus baris-baris yang memiliki missing value, dan menyimpan hasilnya dalam variabel all_books_clean. Setelah pembersihan, jumlah baris data menyusut menjadi 1.031.129.
 ### Penyamaan Judul Buku Berdasarkan ISBN
