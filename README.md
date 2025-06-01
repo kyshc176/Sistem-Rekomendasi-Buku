@@ -132,7 +132,7 @@ Langkah berikutnya adalah membersihkan data dengan menghapus kolom yang tidak re
 
 <img width="871" alt="Screenshot 2025-05-31 at 17 41 21" src="https://github.com/user-attachments/assets/82e55272-e1c8-4878-a74a-fccd858e767a" />
 
-# Analisis
+#### Analisis
 Setelah dilakukan pembersihan, dataset books memiliki lima kolom utama. Statistik terkait jumlah entri unik pada masing-masing kolom adalah:
 - Jumlah ISBN buku: 271.357
 - Jumlah judul buku: 242.132
@@ -151,7 +151,7 @@ Selanjutnya, dilakukan eksplorasi terhadap variabel `ratings` yang mencerminkan 
 
 Karena jumlah data sangat besar (lebih dari 1 juta baris), hanya sebagian data yang akan digunakan untuk proses pelatihan model collaborative filtering. Data yang diambil dibatasi hingga 5000 baris pertama. Dataset hasil subset ini kemudian disimpan dalam variabel `df_rating`.
 
-### Variabel `users`
+#### Variabel `users`
 
 Variabel terakhir adalah `users`, yang berisi informasi pengguna dan demografinya. Hasil eksplorasi menunjukkan:
 
@@ -171,21 +171,21 @@ Berdasarkan hasil eksplorasi awal (data understanding), diketahui bahwa Book Rec
 ## Data Preparation
 Karena sistem rekomendasi akan dikembangkan menggunakan dua pendekatan, yaitu content-based filtering dan collaborative filtering, maka tahap persiapan data akan dibedakan berdasarkan masing-masing teknik.
 
-# Persiapan Data untuk Model Content-Based Filtering
+### Persiapan Data untuk Model Content-Based Filtering
 Dalam tahap ini, dilakukan sejumlah proses untuk menyiapkan data, di antaranya:
 - Menghapus data yang memiliki missing value
 - Menyeragamkan jenis buku berdasarkan ISBN
 Pada metode content-based filtering, setiap nomor ISBN merepresentasikan satu judul buku, sehingga ISBN harus bersifat unik untuk mencegah terjadinya duplikasi dan bias data. Oleh karena itu, data perlu dipastikan sudah bersih dan siap digunakan dalam proses pelatihan model.
-# Penanganan Missing Value
+### Penanganan Missing Value
 Langkah pertama adalah memeriksa keberadaan missing value menggunakan perintah books.isnull().sum(). Hasilnya menunjukkan bahwa hanya fitur User-ID, ISBN, dan Book-Rating yang tidak memiliki missing value. Sebaliknya, fitur seperti Publisher memiliki missing value terbanyak, yaitu 118.650. Jumlah ini dinilai masih dapat ditoleransi (sekitar 10,3% dari total data), sehingga keputusan diambil untuk menghapus baris-baris yang memiliki missing value, dan menyimpan hasilnya dalam variabel all_books_clean. Setelah pembersihan, jumlah baris data menyusut menjadi 1.031.129.
-# Penyamaan Judul Buku Berdasarkan ISBN
+### Penyamaan Judul Buku Berdasarkan ISBN
 Setelah menghapus missing value, langkah berikutnya adalah memastikan tidak ada satu ISBN yang digunakan oleh lebih dari satu judul buku. Hal ini penting agar model tidak salah mengenali buku yang sebenarnya berbeda namun memiliki ISBN yang sama. Setelah dilakukan pemeriksaan, ditemukan bahwa terdapat duplikasi ISBN pada beberapa judul buku. Untuk mengatasi hal ini, data dideduplikasi berdasarkan kolom ISBN, sehingga setiap ISBN hanya mewakili satu entri buku. Setelah proses ini, data tersisa sebanyak 270.145 baris.
 
 Langkah berikutnya adalah menyusun dictionary yang terdiri dari pasangan key-value untuk setiap ISBN, judul buku, penulis, tahun terbit, dan penerbit. Hasil akhir disimpan dalam variabel books_new. 
 
 <img width="933" alt="Screenshot 2025-05-31 at 17 49 02" src="https://github.com/user-attachments/assets/ca6c73d0-8412-40b7-82e9-a3e5f710f800" />
 
-# Persiapan Data untuk Model Collaborative Filtering
+### Persiapan Data untuk Model Collaborative Filtering
 Pada pendekatan collaborative filtering, data perlu dikonversi ke dalam bentuk matriks numerik agar dapat digunakan dalam pelatihan model. Namun sebelum proses pembagian data menjadi training dan validation set, dilakukan beberapa tahap persiapan data sebagai berikut:
 - Melakukan encoding terhadap fitur 'User-ID' dan 'ISBN' ke dalam format indeks numerik (integer).
 - Memetakan hasil encoding ke dataframe terkait.
@@ -226,21 +226,21 @@ Cosine Similarity digunakan untuk mengukur tingkat kesamaan antar judul buku den
 <img width="1321" alt="Screenshot 2025-05-31 at 18 01 12" src="https://github.com/user-attachments/assets/7067a39a-eaac-401b-999b-99b9abf514cb" />
 
 ## Modeling
-# Model Development dengan Collaborative Filtering
-### Konsep Dasar
+### Model Development dengan Collaborative Filtering
+#### Konsep Dasar
 
 Content-Based Filtering merupakan pendekatan sistem rekomendasi yang memanfaatkan informasi konten dari item atau pengguna untuk menghasilkan rekomendasi. Sistem ini bekerja dengan mencocokkan preferensi pengguna dengan karakteristik item yang pernah disukai sebelumnya.
 
 **Contoh implementasi**: Jika pengguna menyukai buku _"Introduction to Machine Learning"_ karya **Alex Smola**, sistem akan mencari dan merekomendasikan buku-buku lain dengan penulis yang sama atau karakteristik serupa.
 
-### Keunggulan Content-Based Filtering
+#### Keunggulan Content-Based Filtering
 
 - **Personalisasi tinggi**: Memberikan rekomendasi yang disesuaikan dengan preferensi unik setiap pengguna  
 - **Solusi cold-start**: Efektif mengatasi masalah ketika data pengguna masih terbatas  
 - **Independensi data**: Tidak bergantung pada informasi pengguna lain  
 - **Cocok untuk item terstruktur**: Bekerja optimal dengan item yang memiliki atribut jelas seperti genre, penulis, atau kategori  
 
-### Keterbatasan Content-Based Filtering
+#### Keterbatasan Content-Based Filtering
 
 - **Kurang eksplorasi**: Hanya merekomendasikan item serupa tanpa memberikan kejutan atau variasi  
 - **Kompleksitas preferensi**: Kesulitan menangkap preferensi pengguna yang dinamis dan kompleks  
