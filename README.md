@@ -208,7 +208,7 @@ Sistem menggunakan **TF-IDF (Term Frequency - Inverse Document Frequency)** Vect
 2. Melakukan mapping array dari indeks integer ke nama fitur menggunakan `get_feature_names_out()`  
 3. Transformasi data ke bentuk matriks berukuran (20.000, 8.746)  
 4. Konversi ke matriks tf-idf menggunakan fungsi `todense()`
-# Dataframe dari matriks tf-idf
+#### Dataframe dari matriks tf-idf
 
 <img width="1295" alt="Screenshot 2025-05-31 at 18 01 03" src="https://github.com/user-attachments/assets/753ccc3a-b540-43b2-8ed5-32abf2af601a" />
 
@@ -221,7 +221,7 @@ Cosine Similarity digunakan untuk mengukur tingkat kesamaan antar judul buku den
 - Menggunakan fungsi `cosine_similarity()` dari `sklearn`  
 - Menghasilkan matriks kesamaan berukuran (20.000 x 20.000)  
 - Semakin kecil sudut antar vektor, semakin tinggi tingkat kesamaan  
-# Dataframe hasil perhitungan cosine similarity
+#### Dataframe hasil perhitungan cosine similarity
 
 <img width="1321" alt="Screenshot 2025-05-31 at 18 01 12" src="https://github.com/user-attachments/assets/7067a39a-eaac-401b-999b-99b9abf514cb" />
 
