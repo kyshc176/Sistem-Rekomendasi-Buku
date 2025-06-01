@@ -96,7 +96,7 @@ Penjelasan masing-masing file adalah sebagai berikut:
 #### Analisis 
 Berdasarkan output yang ditampilkan, diperoleh informasi struktur dari tiga variabel utama dalam dataset:
 
-### 1. `books` (271.360 data, 8 kolom)
+#### 1. `books` (271.360 data, 8 kolom)
 Berisi informasi detail tentang buku:
 - `ISBN`: Nomor identitas unik untuk setiap buku.
 - `Book-Title`: Judul buku.
@@ -106,12 +106,12 @@ Berisi informasi detail tentang buku:
 - `Image-URL-S`: URL gambar buku ukuran kecil.
 - `Image-URL-M`: URL gambar buku ukuran sedang.
 - `Image-URL-L`: URL gambar buku ukuran besar.
-### 2. `ratings` (340.556 data, 3 kolom)
+#### 2. `ratings` (340.556 data, 3 kolom)
 Mencatat penilaian pengguna terhadap buku:
 - `User-ID`: Kode unik pengguna anonim.
 - `ISBN`: Nomor identitas buku.
 - `Book-Rating`: Nilai rating yang diberikan pengguna.
-### 3. `users` (278.858 data, 3 kolom)
+#### 3. `users` (278.858 data, 3 kolom)
 Menyimpan informasi pengguna:
 - `User-ID`: Kode unik pengguna anonim.
 - `Location`: Lokasi tempat tinggal pengguna.
