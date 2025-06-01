@@ -164,7 +164,7 @@ Variabel `users` berguna untuk sistem rekomendasi berbasis demografi. Namun, pad
 
 ### Data Preprocessing
 Berdasarkan hasil eksplorasi awal (data understanding), diketahui bahwa Book Recommendation Dataset terdiri dari tiga file terpisah, yaitu books, ratings, dan users. Pada tahap ini, ketiga file tersebut digabungkan menjadi satu dataset agar dapat digunakan untuk proses pengembangan model. Setelah proses penggabungan dilakukan, terbentuk dataset dengan 7 variabel dan total 1.149.780 baris data. Tabel 5 menampilkan cuplikan dari dataset hasil gabungan antara ratings dan books, yang nantinya akan digunakan sebagai dasar dalam pembuatan sistem rekomendasi.
-# Dataset Gabungan ratings dan books
+#### Dataset Gabungan ratings dan books
 
 <img width="1051" alt="Screenshot 2025-05-31 at 17 46 35" src="https://github.com/user-attachments/assets/f28f218b-efe4-4c23-a5a0-68721ad3b030" />
 
