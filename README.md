@@ -81,19 +81,19 @@ Penjelasan masing-masing file adalah sebagai berikut:
 - Data Preprocessing
 
 ### Data Loading
-# Dataset Books 
+#### Dataset Books 
 
 <img width="1317" alt="Screenshot 2025-05-31 at 17 36 28" src="https://github.com/user-attachments/assets/941dbb29-4953-45b0-8c89-7a2f947b8092" />
 
-# Dataset Ratings
+#### Dataset Ratings
 
 <img width="275" alt="Screenshot 2025-05-31 at 17 36 33" src="https://github.com/user-attachments/assets/dcaac9bd-86bc-44c5-80fe-da26611468bc" />
 
-# Dataset Users
+#### Dataset Users
 
 <img width="346" alt="Screenshot 2025-05-31 at 17 36 37" src="https://github.com/user-attachments/assets/46edd881-d631-4be6-9bb8-05a14ca7a84b" />
 
-# Analisis 
+#### Analisis 
 Berdasarkan output yang ditampilkan, diperoleh informasi struktur dari tiga variabel utama dalam dataset:
 
 ### 1. `books` (271.360 data, 8 kolom)
@@ -128,7 +128,7 @@ Dengan menggunakan fungsi info(), diketahui bahwa dataset books (dari file books
 Setelah ditelusuri, terdapat dua nilai teks yang salah pada kolom tersebut yaitu 'DK Publishing Inc' dan 'Gallimard'. Keduanya kemudian dihapus agar tidak menghambat proses konversi tipe data ke integer. Setelah penghapusan, kolom Year-Of-Publication berhasil diubah ke tipe data integer.
 
 Langkah berikutnya adalah membersihkan data dengan menghapus kolom yang tidak relevan dengan proses pengembangan model. Karena model yang akan dikembangkan adalah sistem rekomendasi berbasis konten (content-based filtering), maka atribut terkait gambar (Image-URL-S, Image-URL-M, Image-URL-L) tidak dibutuhkan dan dihapus. Hasil akhir dari dataset books yang telah dibersihkan ditampilkan pada Tabel 4.
-# Tampilan dataset books setelah pembersihan
+#### Tampilan dataset books setelah pembersihan
 
 <img width="871" alt="Screenshot 2025-05-31 at 17 41 21" src="https://github.com/user-attachments/assets/82e55272-e1c8-4878-a74a-fccd858e767a" />
 
@@ -193,27 +193,6 @@ Pada pendekatan collaborative filtering, data perlu dikonversi ke dalam bentuk m
 - Mengubah tipe data Book-Rating menjadi float agar kompatibel dengan proses pelatihan model.
 Setelah semua langkah di atas selesai, data siap untuk dibagi menjadi data pelatihan dan data validasi sebagai bagian dari proses training model collaborative filtering.
 
-## Modeling
-# Model Development dengan Collaborative Filtering
-### Konsep Dasar
-
-Content-Based Filtering merupakan pendekatan sistem rekomendasi yang memanfaatkan informasi konten dari item atau pengguna untuk menghasilkan rekomendasi. Sistem ini bekerja dengan mencocokkan preferensi pengguna dengan karakteristik item yang pernah disukai sebelumnya.
-
-**Contoh implementasi**: Jika pengguna menyukai buku _"Introduction to Machine Learning"_ karya **Alex Smola**, sistem akan mencari dan merekomendasikan buku-buku lain dengan penulis yang sama atau karakteristik serupa.
-
-### Keunggulan Content-Based Filtering
-
-- **Personalisasi tinggi**: Memberikan rekomendasi yang disesuaikan dengan preferensi unik setiap pengguna  
-- **Solusi cold-start**: Efektif mengatasi masalah ketika data pengguna masih terbatas  
-- **Independensi data**: Tidak bergantung pada informasi pengguna lain  
-- **Cocok untuk item terstruktur**: Bekerja optimal dengan item yang memiliki atribut jelas seperti genre, penulis, atau kategori  
-
-### Keterbatasan Content-Based Filtering
-
-- **Kurang eksplorasi**: Hanya merekomendasikan item serupa tanpa memberikan kejutan atau variasi  
-- **Kompleksitas preferensi**: Kesulitan menangkap preferensi pengguna yang dinamis dan kompleks  
-- **Filter bubble**: Risiko terjebak dalam "gelembung filter" yang membatasi diversitas rekomendasi  
-
 ### Implementasi Teknis
 
 #### TF-IDF Vectorization
@@ -245,6 +224,27 @@ Cosine Similarity digunakan untuk mengukur tingkat kesamaan antar judul buku den
 # Dataframe hasil perhitungan cosine similarity
 
 <img width="1321" alt="Screenshot 2025-05-31 at 18 01 12" src="https://github.com/user-attachments/assets/7067a39a-eaac-401b-999b-99b9abf514cb" />
+
+## Modeling
+# Model Development dengan Collaborative Filtering
+### Konsep Dasar
+
+Content-Based Filtering merupakan pendekatan sistem rekomendasi yang memanfaatkan informasi konten dari item atau pengguna untuk menghasilkan rekomendasi. Sistem ini bekerja dengan mencocokkan preferensi pengguna dengan karakteristik item yang pernah disukai sebelumnya.
+
+**Contoh implementasi**: Jika pengguna menyukai buku _"Introduction to Machine Learning"_ karya **Alex Smola**, sistem akan mencari dan merekomendasikan buku-buku lain dengan penulis yang sama atau karakteristik serupa.
+
+### Keunggulan Content-Based Filtering
+
+- **Personalisasi tinggi**: Memberikan rekomendasi yang disesuaikan dengan preferensi unik setiap pengguna  
+- **Solusi cold-start**: Efektif mengatasi masalah ketika data pengguna masih terbatas  
+- **Independensi data**: Tidak bergantung pada informasi pengguna lain  
+- **Cocok untuk item terstruktur**: Bekerja optimal dengan item yang memiliki atribut jelas seperti genre, penulis, atau kategori  
+
+### Keterbatasan Content-Based Filtering
+
+- **Kurang eksplorasi**: Hanya merekomendasikan item serupa tanpa memberikan kejutan atau variasi  
+- **Kompleksitas preferensi**: Kesulitan menangkap preferensi pengguna yang dinamis dan kompleks  
+- **Filter bubble**: Risiko terjebak dalam "gelembung filter" yang membatasi diversitas rekomendasi  
 
 #### Fungsi Rekomendasi
 
