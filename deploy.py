@@ -59,11 +59,25 @@ class RecommenderNet(tf.keras.Model):
 def load_data():
     books = pd.read_csv('books_clean.csv')
     
-    # Ekstrak file zip jika cosine_sim.pkl belum ada di direktori
-    if not os.path.exists('cosine_sim.pkl') and os.path.exists('cosine_sim.zip'):
-        with zipfile.ZipFile('cosine_sim.zip', 'r') as zip_ref:
-            zip_ref.extractall()
+    # 1. Deteksi nama file zip yang ada di GitHub
+    zip_file_path = None
+    if os.path.exists('cosine_sim.zip'):
+        zip_file_path = 'cosine_sim.zip'
+    elif os.path.exists('cosine_sim.pkl.zip'):
+        zip_file_path = 'cosine_sim.pkl.zip'
+        
+    # 2. Ekstrak cerdas (mengabaikan folder di dalam zip)
+    if not os.path.exists('cosine_sim.pkl') and zip_file_path:
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            for file_info in zip_ref.infolist():
+                # Cari file apa saja di dalam zip yang berakhiran .pkl
+                if file_info.filename.endswith('.pkl'):
+                    # Paksa ekstrak ke folder utama dengan nama 'cosine_sim.pkl'
+                    file_info.filename = 'cosine_sim.pkl' 
+                    zip_ref.extract(file_info, '.')
+                    break # Berhenti setelah menemukan file pkl
             
+    # 3. Load file yang sudah diekstrak
     with open('cosine_sim.pkl', 'rb') as f:
         cosine_sim = pickle.load(f)
         
@@ -71,32 +85,6 @@ def load_data():
         mappings = pickle.load(f)
         
     return books, cosine_sim, mappings
-
-@st.cache_resource
-def load_model(num_users, num_book_title):
-    try:
-        model = RecommenderNet(num_users, num_book_title, 50)
-        # Pancing model dengan input tensor integer
-        model(tf.constant([[0, 0]])) 
-        
-        # Load weights murni dari file format Pickle
-        with open('model_weights.pkl', 'rb') as f:
-            weights = pickle.load(f)
-        model.set_weights(weights)
-        return model
-    except Exception as e:
-        print(f"Error loading model: {e}")
-        return None
-
-# Load semua file
-try:
-    books, cosine_sim_df, mappings = load_data()
-    num_users = len(mappings['user_to_user_encoded'])
-    num_book_title = len(mappings['isbn_to_isbn_encoded'])
-    model = load_model(num_users, num_book_title)
-except FileNotFoundError as e:
-    st.error(f"⚠️ File tidak ditemukan: {e}. Pastikan file dataset dan model sudah benar.")
-    st.stop()
 
 # ==========================================
 # SIDEBAR NAVIGASI
