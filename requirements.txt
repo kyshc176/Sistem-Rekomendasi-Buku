@@ -1,8 +1,5 @@
+streamlit
 pandas
 numpy
+tensorflow
 scikit-learn
-scipy
-matplotlib
-seaborn
-Flask
-requests
