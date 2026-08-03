@@ -57,27 +57,38 @@ class RecommenderNet(tf.keras.Model):
 # ==========================================
 @st.cache_data
 def load_data():
+    # 1. Ekstrak CSV dari zip jika file books_clean.csv belum ada
+    if not os.path.exists('books_clean.csv'):
+        # Cek beberapa kemungkinan nama file zip Anda
+        for csv_zip in ['csv.zip', 'books_clean.zip', 'books_clean.csv.zip']:
+            if os.path.exists(csv_zip):
+                with zipfile.ZipFile(csv_zip, 'r') as zip_ref:
+                    for file_info in zip_ref.infolist():
+                        if file_info.filename.endswith('.csv'):
+                            file_info.filename = 'books_clean.csv' # Paksa nama saat diekstrak
+                            zip_ref.extract(file_info, '.')
+                            break
+                break
+                
+    # Load dataset CSV
     books = pd.read_csv('books_clean.csv')
     
-    # 1. Deteksi nama file zip yang ada di GitHub
+    # 2. Ekstrak Cosine Similarity dari zip jika belum ada
     zip_file_path = None
     if os.path.exists('cosine_sim.zip'):
         zip_file_path = 'cosine_sim.zip'
     elif os.path.exists('cosine_sim.pkl.zip'):
         zip_file_path = 'cosine_sim.pkl.zip'
         
-    # 2. Ekstrak cerdas (mengabaikan folder di dalam zip)
     if not os.path.exists('cosine_sim.pkl') and zip_file_path:
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
             for file_info in zip_ref.infolist():
-                # Cari file apa saja di dalam zip yang berakhiran .pkl
                 if file_info.filename.endswith('.pkl'):
-                    # Paksa ekstrak ke folder utama dengan nama 'cosine_sim.pkl'
                     file_info.filename = 'cosine_sim.pkl' 
                     zip_ref.extract(file_info, '.')
-                    break # Berhenti setelah menemukan file pkl
+                    break
             
-    # 3. Load file yang sudah diekstrak
+    # 3. Load file pkl
     with open('cosine_sim.pkl', 'rb') as f:
         cosine_sim = pickle.load(f)
         
@@ -85,6 +96,36 @@ def load_data():
         mappings = pickle.load(f)
         
     return books, cosine_sim, mappings
+
+@st.cache_resource
+def load_model(num_users, num_book_title):
+    try:
+        model = RecommenderNet(num_users, num_book_title, 50)
+        # Pancing model dengan input tensor integer
+        model(tf.constant([[0, 0]])) 
+        
+        # Load weights murni dari file format Pickle
+        with open('model_weights.pkl', 'rb') as f:
+            weights = pickle.load(f)
+        model.set_weights(weights)
+        return model
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        return None
+
+# ==========================================
+# INISIALISASI DATA & ERROR HANDLING GLOBAL
+# ==========================================
+try:
+    books, cosine_sim_df, mappings = load_data()
+    num_users = len(mappings['user_to_user_encoded'])
+    num_book_title = len(mappings['isbn_to_isbn_encoded'])
+    model = load_model(num_users, num_book_title)
+except Exception as e:
+    # Error handling ini akan mencegah NameError dan memberikan pesan jelas di layar
+    st.error(f"⚠️ Gagal memuat data. Detail error: {e}")
+    st.info("Pastikan file zip CSV dan Pickle sudah di-push ke GitHub Anda dengan benar.")
+    st.stop()
 
 # ==========================================
 # SIDEBAR NAVIGASI
