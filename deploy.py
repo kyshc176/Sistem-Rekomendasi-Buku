@@ -5,6 +5,8 @@ import pickle
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import zipfile
+import os
 
 # ==========================================
 # KONFIGURASI HALAMAN & CUSTOM CSS (AESTHETIC)
@@ -56,20 +58,28 @@ class RecommenderNet(tf.keras.Model):
 @st.cache_data
 def load_data():
     books = pd.read_csv('books_clean.csv')
+    
+    # Ekstrak file zip jika cosine_sim.pkl belum ada di direktori
+    if not os.path.exists('cosine_sim.pkl') and os.path.exists('cosine_sim.zip'):
+        with zipfile.ZipFile('cosine_sim.zip', 'r') as zip_ref:
+            zip_ref.extractall()
+            
     with open('cosine_sim.pkl', 'rb') as f:
         cosine_sim = pickle.load(f)
+        
     with open('mappings.pkl', 'rb') as f:
         mappings = pickle.load(f)
+        
     return books, cosine_sim, mappings
 
 @st.cache_resource
 def load_model(num_users, num_book_title):
     try:
         model = RecommenderNet(num_users, num_book_title, 50)
-        # PERBAIKAN 1: Pancing model dengan input tensor integer
+        # Pancing model dengan input tensor integer
         model(tf.constant([[0, 0]])) 
         
-        # PERBAIKAN 2: Load weights murni dari file format Pickle
+        # Load weights murni dari file format Pickle
         with open('model_weights.pkl', 'rb') as f:
             weights = pickle.load(f)
         model.set_weights(weights)
@@ -84,8 +94,8 @@ try:
     num_users = len(mappings['user_to_user_encoded'])
     num_book_title = len(mappings['isbn_to_isbn_encoded'])
     model = load_model(num_users, num_book_title)
-except FileNotFoundError:
-    st.error("⚠️ Pastikan file data dan model (books_clean.csv, cosine_sim.pkl, mappings.pkl, model_weights.pkl) ada di folder yang sama!")
+except FileNotFoundError as e:
+    st.error(f"⚠️ File tidak ditemukan: {e}. Pastikan file dataset dan model sudah benar.")
     st.stop()
 
 # ==========================================
@@ -132,7 +142,7 @@ elif menu == "Cari Buku Serupa (Content-Based)":
                 closest = cosine_sim_df.columns[index[-1:-(5+2):-1]]
                 closest = closest.drop(selected_book, errors='ignore')
                 
-                # PERBAIKAN 3: Bungkus array ke dalam dictionary Pandas
+                # Bungkus array ke dalam dictionary Pandas
                 result_df = pd.DataFrame({'book_title': closest})
                 result_df = result_df.merge(books[['book_title', 'book_author']], on='book_title')
                 result_df = result_df.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'}).drop_duplicates().head(5)
@@ -150,7 +160,7 @@ elif menu == "Rekomendasi Personal (Collaborative)":
     st.write("Prediksi buku yang mungkin akan Anda beri rating tinggi berdasarkan riwayat bacaan Anda.")
     
     user_list = list(mappings['user_to_user_encoded'].keys())
-    selected_user = st.selectbox("Pilih User ID Anda:", user_list[:100]) # Batasi 100 agar UI tidak berat
+    selected_user = st.selectbox("Pilih User ID Anda:", user_list[:100])
     
     if st.button("Tampilkan Rekomendasi"):
         if model is None:
@@ -160,7 +170,7 @@ elif menu == "Rekomendasi Personal (Collaborative)":
                 user_encoder = mappings['user_to_user_encoded'].get(selected_user)
                 all_isbn = list(mappings['isbn_to_isbn_encoded'].keys())
                 
-                # Format input untuk Keras Model: array dari [user_encoded, isbn_encoded]
+                # Format input untuk Keras Model
                 book_not_readed_encoded = [mappings['isbn_to_isbn_encoded'][x] for x in all_isbn]
                 user_book_array = np.column_stack((
                     np.full(len(book_not_readed_encoded), user_encoder), 
