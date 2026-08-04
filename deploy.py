@@ -2,14 +2,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 import zipfile
 import os
 
 # ==========================================
-# KONFIGURASI HALAMAN & CUSTOM CSS (AESTHETIC)
+# KONFIGURASI HALAMAN & CUSTOM CSS
 # ==========================================
 st.set_page_config(page_title="Book Recommender", page_icon="📚", layout="wide")
 
@@ -19,61 +16,28 @@ st.markdown("""
     h1, h2, h3 { color: #4A4036; font-family: 'Helvetica Neue', sans-serif; font-weight: 600; }
     .stButton>button { background-color: #C1A58D; color: white; border-radius: 8px; border: none; padding: 10px 24px; transition: 0.3s; }
     .stButton>button:hover { background-color: #A68B75; }
-    .css-1d391kg { background-color: #F3EFEA; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# DEFINISI KELAS KERAS
-# ==========================================
-class RecommenderNet(tf.keras.Model):
-    def __init__(self, num_users, num_book_title, embedding_size, dropout_rate=0.2, **kwargs):
-        super(RecommenderNet, self).__init__(**kwargs)
-        self.user_embedding = layers.Embedding(
-            num_users, embedding_size, embeddings_initializer='he_normal', embeddings_regularizer=keras.regularizers.l2(1e-6)
-        )
-        self.user_bias = layers.Embedding(num_users, 1)
-        self.book_title_embedding = layers.Embedding(
-            num_book_title, embedding_size, embeddings_initializer='he_normal', embeddings_regularizer=keras.regularizers.l2(1e-6)
-        )
-        self.book_title_bias = layers.Embedding(num_book_title, 1)
-        self.dropout = layers.Dropout(rate=dropout_rate)
-
-    def call(self, inputs):
-        user_vector = self.user_embedding(inputs[:, 0])
-        user_vector = self.dropout(user_vector)
-        user_bias = self.user_bias(inputs[:, 0])
-        
-        book_title_vector = self.book_title_embedding(inputs[:, 1])
-        book_title_vector = self.dropout(book_title_vector)
-        book_title_bias = self.book_title_bias(inputs[:, 1])
-        
-        dot_user_book_title = tf.tensordot(user_vector, book_title_vector, 2)
-        x = dot_user_book_title + user_bias + book_title_bias
-        return tf.nn.sigmoid(x)
-
-# ==========================================
-# FUNGSI LOAD DATA (Menggunakan Cache agar Cepat)
+# LAZY LOADERS (Fungsi dipisah agar RAM tidak jebol)
 # ==========================================
 @st.cache_data
-def load_data():
-    # 1. Ekstrak CSV dari zip jika file books_clean.csv belum ada
+def load_books():
     if not os.path.exists('books_clean.csv'):
-        # Cek beberapa kemungkinan nama file zip Anda
         for csv_zip in ['csv.zip', 'books_clean.zip', 'books_clean.csv.zip']:
             if os.path.exists(csv_zip):
                 with zipfile.ZipFile(csv_zip, 'r') as zip_ref:
                     for file_info in zip_ref.infolist():
                         if file_info.filename.endswith('.csv'):
-                            file_info.filename = 'books_clean.csv' # Paksa nama saat diekstrak
+                            file_info.filename = 'books_clean.csv'
                             zip_ref.extract(file_info, '.')
                             break
                 break
-                
-    # Load dataset CSV
-    books = pd.read_csv('books_clean.csv')
-    
-    # 2. Ekstrak Cosine Similarity dari zip jika belum ada
+    return pd.read_csv('books_clean.csv')
+
+@st.cache_data
+def load_content_based_data():
     zip_file_path = None
     if os.path.exists('cosine_sim.zip'):
         zip_file_path = 'cosine_sim.zip'
@@ -88,44 +52,49 @@ def load_data():
                     zip_ref.extract(file_info, '.')
                     break
             
-    # 3. Load file pkl
     with open('cosine_sim.pkl', 'rb') as f:
         cosine_sim = pickle.load(f)
-        
+    return cosine_sim
+
+@st.cache_data
+def load_mappings():
     with open('mappings.pkl', 'rb') as f:
-        mappings = pickle.load(f)
-        
-    return books, cosine_sim, mappings
+        return pickle.load(f)
 
 @st.cache_resource
-def load_model(num_users, num_book_title):
-    try:
-        model = RecommenderNet(num_users, num_book_title, 50)
-        # Pancing model dengan input tensor integer
-        model(tf.constant([[0, 0]])) 
-        
-        # Load weights murni dari file format Pickle
-        with open('model_weights.pkl', 'rb') as f:
-            weights = pickle.load(f)
-        model.set_weights(weights)
-        return model
-    except Exception as e:
-        print(f"Error loading model: {e}")
-        return None
+def load_collab_model(num_users, num_book_title):
+    # Import TensorFlow HANYA saat model dipanggil untuk menghemat RAM di awal
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers
 
-# ==========================================
-# INISIALISASI DATA & ERROR HANDLING GLOBAL
-# ==========================================
-try:
-    books, cosine_sim_df, mappings = load_data()
-    num_users = len(mappings['user_to_user_encoded'])
-    num_book_title = len(mappings['isbn_to_isbn_encoded'])
-    model = load_model(num_users, num_book_title)
-except Exception as e:
-    # Error handling ini akan mencegah NameError dan memberikan pesan jelas di layar
-    st.error(f"⚠️ Gagal memuat data. Detail error: {e}")
-    st.info("Pastikan file zip CSV dan Pickle sudah di-push ke GitHub Anda dengan benar.")
-    st.stop()
+    class RecommenderNet(tf.keras.Model):
+        def __init__(self, num_users, num_book_title, embedding_size, dropout_rate=0.2, **kwargs):
+            super(RecommenderNet, self).__init__(**kwargs)
+            self.user_embedding = layers.Embedding(num_users, embedding_size, embeddings_initializer='he_normal')
+            self.user_bias = layers.Embedding(num_users, 1)
+            self.book_title_embedding = layers.Embedding(num_book_title, embedding_size, embeddings_initializer='he_normal')
+            self.book_title_bias = layers.Embedding(num_book_title, 1)
+            self.dropout = layers.Dropout(rate=dropout_rate)
+
+        def call(self, inputs):
+            user_vector = self.user_embedding(inputs[:, 0])
+            user_vector = self.dropout(user_vector)
+            user_bias = self.user_bias(inputs[:, 0])
+            book_title_vector = self.book_title_embedding(inputs[:, 1])
+            book_title_vector = self.dropout(book_title_vector)
+            book_title_bias = self.book_title_bias(inputs[:, 1])
+            dot_user_book_title = tf.tensordot(user_vector, book_title_vector, 2)
+            x = dot_user_book_title + user_bias + book_title_bias
+            return tf.nn.sigmoid(x)
+
+    model = RecommenderNet(num_users, num_book_title, 50)
+    model(tf.constant([[0, 0]])) # Pancing model
+    
+    with open('model_weights.pkl', 'rb') as f:
+        weights = pickle.load(f)
+    model.set_weights(weights)
+    return model
 
 # ==========================================
 # SIDEBAR NAVIGASI
@@ -134,20 +103,25 @@ st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2232/2232688.png", widt
 st.sidebar.title("Navigasi Menu")
 menu = st.sidebar.radio("Pilih Fitur:", ["Beranda", "Cari Buku Serupa (Content-Based)", "Rekomendasi Personal (Collaborative)"])
 
+# Tangkap error jika CSV gagal dimuat di awal
+try:
+    books = load_books()
+except Exception as e:
+    st.error(f"Gagal memuat dataset buku: {e}")
+    st.stop()
+
 # ==========================================
 # MENU 1: BERANDA
 # ==========================================
 if menu == "Beranda":
     st.title("📚 Sistem Rekomendasi Buku")
-    st.write("Selamat datang di prototipe sistem rekomendasi buku. Silakan gunakan menu di sebelah kiri untuk mengeksplorasi rekomendasi berdasarkan kemiripan judul atau preferensi pengguna.")
+    st.write("Selamat datang! Sistem ini menggunakan Machine Learning untuk merekomendasikan buku.")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
         st.metric("Total Buku", f"{len(books):,}")
     with col2:
         st.metric("Total Penulis", f"{len(books['book_author'].unique()):,}")
-    with col3:
-        st.metric("Total Pengguna Aktif", f"{num_users:,}")
         
     st.markdown("---")
     st.subheader("Sekilas Data Buku")
@@ -158,61 +132,67 @@ if menu == "Beranda":
 # ==========================================
 elif menu == "Cari Buku Serupa (Content-Based)":
     st.title("🔍 Temukan Buku Serupa")
-    st.write("Sistem akan mencari buku dengan penulis dan karakteristik yang mirip dengan buku pilihan Anda.")
     
-    # Dropdown judul buku
+    with st.spinner('Menyiapkan AI Pencari Kemiripan (Proses ini mungkin memakan waktu sebentar)...'):
+        try:
+            cosine_sim_df = load_content_based_data()
+        except Exception as e:
+            st.error(f"Gagal memuat model kemiripan: {e}")
+            st.stop()
+
     book_list = books['book_title'].unique()
     selected_book = st.selectbox("Pilih judul buku yang Anda sukai:", book_list)
     
     if st.button("Cari Rekomendasi"):
-        with st.spinner('Mencari buku terbaik untuk Anda...'):
-            try:
-                index = cosine_sim_df.loc[:, selected_book].to_numpy().argpartition(range(-1, -6, -1))
-                closest = cosine_sim_df.columns[index[-1:-(5+2):-1]]
-                closest = closest.drop(selected_book, errors='ignore')
-                
-                # Bungkus array ke dalam dictionary Pandas
-                result_df = pd.DataFrame({'book_title': closest})
-                result_df = result_df.merge(books[['book_title', 'book_author']], on='book_title')
-                result_df = result_df.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'}).drop_duplicates().head(5)
-                
-                st.success("Berhasil menemukan buku serupa!")
-                st.table(result_df)
-            except KeyError:
-                st.error("Buku tidak ditemukan dalam matriks similarity.")
+        try:
+            index = cosine_sim_df.loc[:, selected_book].to_numpy().argpartition(range(-1, -6, -1))
+            closest = cosine_sim_df.columns[index[-1:-(5+2):-1]]
+            closest = closest.drop(selected_book, errors='ignore')
+            
+            result_df = pd.DataFrame({'book_title': closest}).merge(books[['book_title', 'book_author']], on='book_title').drop_duplicates().head(5)
+            result_df = result_df.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
+            
+            st.success("Berhasil menemukan buku serupa!")
+            st.table(result_df)
+        except KeyError:
+            st.error("Buku tidak ditemukan dalam matriks similarity.")
 
 # ==========================================
 # MENU 3: COLLABORATIVE FILTERING
 # ==========================================
 elif menu == "Rekomendasi Personal (Collaborative)":
     st.title("✨ Rekomendasi Personal")
-    st.write("Prediksi buku yang mungkin akan Anda beri rating tinggi berdasarkan riwayat bacaan Anda.")
     
+    with st.spinner('Menyiapkan Model Deep Learning TensorFlow...'):
+        try:
+            mappings = load_mappings()
+            num_users = len(mappings['user_to_user_encoded'])
+            num_book_title = len(mappings['isbn_to_isbn_encoded'])
+            model = load_collab_model(num_users, num_book_title)
+        except Exception as e:
+            st.error(f"Gagal memuat AI Rekomendasi: {e}")
+            st.stop()
+
     user_list = list(mappings['user_to_user_encoded'].keys())
     selected_user = st.selectbox("Pilih User ID Anda:", user_list[:100])
     
     if st.button("Tampilkan Rekomendasi"):
-        if model is None:
-            st.error("Model gagal dimuat. Pastikan Anda sudah mengunduh file 'model_weights.pkl' dari Colab.")
-        else:
-            with st.spinner('Memproses pola bacaan Anda...'):
-                user_encoder = mappings['user_to_user_encoded'].get(selected_user)
-                all_isbn = list(mappings['isbn_to_isbn_encoded'].keys())
-                
-                # Format input untuk Keras Model
-                book_not_readed_encoded = [mappings['isbn_to_isbn_encoded'][x] for x in all_isbn]
-                user_book_array = np.column_stack((
-                    np.full(len(book_not_readed_encoded), user_encoder), 
-                    book_not_readed_encoded
-                ))
-                
-                # Prediksi Keras
-                ratings_model = model.predict(user_book_array, verbose=0).flatten()
-                top_ratings_indices = ratings_model.argsort()[-10:][::-1]
-                
-                recommended_isbn = [all_isbn[i] for i in top_ratings_indices]
-                recommended_books = books[books['isbn'].isin(recommended_isbn)][['book_title', 'book_author']].drop_duplicates()
-                recommended_books = recommended_books.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
-                
-                st.success(f"Top 10 Rekomendasi untuk User: {selected_user}")
-                st.table(recommended_books.reset_index(drop=True))
+        with st.spinner('Memproses pola bacaan Anda...'):
+            user_encoder = mappings['user_to_user_encoded'].get(selected_user)
+            all_isbn = list(mappings['isbn_to_isbn_encoded'].keys())
+            
+            book_not_readed_encoded = [mappings['isbn_to_isbn_encoded'][x] for x in all_isbn]
+            user_book_array = np.column_stack((
+                np.full(len(book_not_readed_encoded), user_encoder), 
+                book_not_readed_encoded
+            ))
+            
+            ratings_model = model.predict(user_book_array, verbose=0).flatten()
+            top_ratings_indices = ratings_model.argsort()[-10:][::-1]
+            
+            recommended_isbn = [all_isbn[i] for i in top_ratings_indices]
+            recommended_books = books[books['isbn'].isin(recommended_isbn)][['book_title', 'book_author']].drop_duplicates()
+            recommended_books = recommended_books.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
+            
+            st.success(f"Top 10 Rekomendasi untuk User: {selected_user}")
+            st.table(recommended_books.reset_index(drop=True))
