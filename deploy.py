@@ -146,17 +146,38 @@ elif menu == "Cari Buku Serupa (Content-Based)":
     
     if st.button("Cari Rekomendasi"):
         try:
-            index = cosine_sim_df.loc[:, selected_book].to_numpy().argpartition(range(-1, -6, -1))
-            closest = cosine_sim_df.columns[index[-1:-(5+2):-1]]
-            closest = closest.drop(selected_book, errors='ignore')
-            
-            result_df = pd.DataFrame({'book_title': closest}).merge(books[['book_title', 'book_author']], on='book_title').drop_duplicates().head(5)
-            result_df = result_df.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
+            # Cek apakah bentuknya numpy array (sering terjadi dari ekspor Scikit-Learn)
+            if isinstance(cosine_sim_df, np.ndarray):
+                # Cari index angka dari buku yang dipilih
+                idx = books[books['book_title'] == selected_book].index[0]
+                
+                # Ambil skor kemiripan, lalu urutkan dari yang terbesar ke terkecil
+                sim_scores = list(enumerate(cosine_sim_df[idx]))
+                sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+                
+                # Ambil 5 buku teratas (index 1 ke 6 karena index 0 biasanya adalah buku itu sendiri)
+                sim_scores = sim_scores[1:6] 
+                book_indices = [i[0] for i in sim_scores]
+                
+                # Dapatkan data buku berdasarkan index
+                result_df = books.iloc[book_indices][['book_title', 'book_author']].drop_duplicates().head(5)
+                result_df = result_df.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
+                
+            else:
+                # Logika jika bentuknya Pandas DataFrame (memiliki nama kolom judul buku)
+                index = cosine_sim_df.loc[:, selected_book].to_numpy().argpartition(range(-1, -6, -1))
+                closest = cosine_sim_df.columns[index[-1:-(5+2):-1]]
+                closest = closest.drop(selected_book, errors='ignore')
+                
+                result_df = pd.DataFrame({'book_title': closest}).merge(books[['book_title', 'book_author']], on='book_title').drop_duplicates().head(5)
+                result_df = result_df.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
             
             st.success("Berhasil menemukan buku serupa!")
-            st.table(result_df)
-        except KeyError:
-            st.error("Buku tidak ditemukan dalam matriks similarity.")
+            st.table(result_df.reset_index(drop=True))
+            
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat mencari buku: {e}")
+            st.info("Saran: Pastikan judul buku yang dipilih memiliki data yang sinkron dengan matriks kemiripan.")
 
 # ==========================================
 # MENU 3: COLLABORATIVE FILTERING
@@ -196,5 +217,5 @@ elif menu == "Rekomendasi Personal (Collaborative)":
             recommended_books = books[books['isbn'].isin(recommended_isbn)][['book_title', 'book_author']].drop_duplicates()
             recommended_books = recommended_books.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
             
-            st.success(f"Top 10 Rekomendasi untuk User: {selected_user}")
+            st.success(f"Top Rekomendasi untuk User: {selected_user}")
             st.table(recommended_books.reset_index(drop=True))
