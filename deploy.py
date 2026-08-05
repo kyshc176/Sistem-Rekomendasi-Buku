@@ -20,7 +20,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# LAZY LOADERS (Fungsi dipisah agar RAM tidak jebol)
+# LAZY LOADERS (Fungsi dipisah agar memori aman)
 # ==========================================
 @st.cache_data
 def load_books():
@@ -63,9 +63,8 @@ def load_mappings():
 
 @st.cache_resource
 def load_collab_model(num_users, num_book_title):
-    # Import TensorFlow HANYA saat model dipanggil untuk menghemat RAM di awal
+    # Import TensorFlow HANYA saat model dipanggil
     import tensorflow as tf
-    from tensorflow import keras
     from tensorflow.keras import layers
 
     class RecommenderNet(tf.keras.Model):
@@ -103,19 +102,19 @@ st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2232/2232688.png", widt
 st.sidebar.title("Navigasi Menu")
 menu = st.sidebar.radio("Pilih Fitur:", ["Beranda", "Cari Buku Serupa (Content-Based)", "Rekomendasi Personal (Collaborative)"])
 
-# Tangkap error jika CSV gagal dimuat di awal
-try:
-    books = load_books()
-except Exception as e:
-    st.error(f"Gagal memuat dataset buku: {e}")
-    st.stop()
-
 # ==========================================
 # MENU 1: BERANDA
 # ==========================================
 if menu == "Beranda":
     st.title("📚 Sistem Rekomendasi Buku")
     st.write("Selamat datang! Sistem ini menggunakan Machine Learning untuk merekomendasikan buku.")
+    
+    with st.spinner("Mengekstrak dan memuat dataset..."):
+        try:
+            books = load_books()
+        except Exception as e:
+            st.error(f"Gagal memuat dataset buku: {e}")
+            st.stop()
     
     col1, col2 = st.columns(2)
     with col1:
@@ -125,7 +124,8 @@ if menu == "Beranda":
         
     st.markdown("---")
     st.subheader("Sekilas Data Buku")
-    st.dataframe(books[['isbn', 'book_title', 'book_author', 'year_of_publication']].head(15), use_container_width=True)
+    # Menggunakan width='stretch' sesuai standar terbaru Streamlit
+    st.dataframe(books[['isbn', 'book_title', 'book_author', 'year_of_publication']].head(15), width='stretch')
 
 # ==========================================
 # MENU 2: CONTENT-BASED FILTERING
@@ -135,9 +135,10 @@ elif menu == "Cari Buku Serupa (Content-Based)":
     
     with st.spinner('Menyiapkan AI Pencari Kemiripan (Proses ini mungkin memakan waktu sebentar)...'):
         try:
+            books = load_books()
             cosine_sim_df = load_content_based_data()
         except Exception as e:
-            st.error(f"Gagal memuat model kemiripan: {e}")
+            st.error(f"Gagal memuat model atau data: {e}")
             st.stop()
 
     book_list = books['book_title'].unique()
@@ -165,6 +166,7 @@ elif menu == "Rekomendasi Personal (Collaborative)":
     
     with st.spinner('Menyiapkan Model Deep Learning TensorFlow...'):
         try:
+            books = load_books()
             mappings = load_mappings()
             num_users = len(mappings['user_to_user_encoded'])
             num_book_title = len(mappings['isbn_to_isbn_encoded'])
