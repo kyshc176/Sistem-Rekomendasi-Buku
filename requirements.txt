@@ -1,5 +1,6 @@
-streamlit
+streamlit>=1.38.0
 pandas
 numpy
 tensorflow-cpu
 scikit-learn
+starlette<0.40.0
