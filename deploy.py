@@ -4,6 +4,11 @@ import numpy as np
 import pickle
 import zipfile
 import os
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from sklearn.feature_extraction.text import TfidfVectorizer 
+from sklearn.metrics.pairwise import cosine_similarity 
 
 # ==========================================
 # KONFIGURASI HALAMAN & CUSTOM CSS
@@ -128,57 +133,59 @@ if menu == "Beranda":
     st.dataframe(books[['isbn', 'book_title', 'book_author', 'year_of_publication']].head(15), width='stretch')
 
 # ==========================================
-# MENU 2: CONTENT-BASED FILTERING
+# MENU 2: CONTENT-BASED FILTERING (On-the-Fly)
 # ==========================================
 elif menu == "Cari Buku Serupa (Content-Based)":
     st.title("🔍 Temukan Buku Serupa")
     
-    with st.spinner('Menyiapkan AI Pencari Kemiripan (Proses ini mungkin memakan waktu sebentar)...'):
+    with st.spinner('Memuat daftar buku...'):
         try:
             books = load_books()
-            cosine_sim_df = load_content_based_data()
         except Exception as e:
-            st.error(f"Gagal memuat model atau data: {e}")
+            st.error(f"Gagal memuat dataset: {e}")
             st.stop()
 
+    # Dropdown judul buku
     book_list = books['book_title'].unique()
     selected_book = st.selectbox("Pilih judul buku yang Anda sukai:", book_list)
     
     if st.button("Cari Rekomendasi"):
-        try:
-            # Cek apakah bentuknya numpy array (sering terjadi dari ekspor Scikit-Learn)
-            if isinstance(cosine_sim_df, np.ndarray):
-                # Cari index angka dari buku yang dipilih
-                idx = books[books['book_title'] == selected_book].index[0]
+        with st.spinner('Menganalisis kemiripan pola matriks secara langsung (On-the-Fly)...'):
+            try:
+                # 1. Hapus missing value pada kolom penulis agar tidak error
+                data = books.dropna(subset=['book_author'])
+                # Hapus duplikat judul buku agar komputasi lebih ringan
+                data = data.drop_duplicates('book_title').reset_index(drop=True)
                 
-                # Ambil skor kemiripan, lalu urutkan dari yang terbesar ke terkecil
-                sim_scores = list(enumerate(cosine_sim_df[idx]))
+                # 2. Bangun ulang matriks TF-IDF secara instan
+                tf_idf = TfidfVectorizer()
+                tfidf_matrix = tf_idf.fit_transform(data['book_author'])
+                
+                # 3. Cari indeks dari buku yang dipilih
+                try:
+                    idx = data[data['book_title'] == selected_book].index[0]
+                except IndexError:
+                    st.error("Buku ini tidak memiliki data penulis yang cukup untuk dianalisis.")
+                    st.stop()
+                
+                # 4. Hitung Cosine Similarity HANYA untuk buku yang dipilih (Sangat Hemat RAM)
+                cosine_sim_array = cosine_similarity(tfidf_matrix[idx], tfidf_matrix).flatten()
+                
+                # 5. Urutkan kemiripan (Ambil 6 teratas, karena index 0 adalah buku itu sendiri)
+                sim_scores = list(enumerate(cosine_sim_array))
                 sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+                sim_scores = sim_scores[1:6]
                 
-                # Ambil 5 buku teratas (index 1 ke 6 karena index 0 biasanya adalah buku itu sendiri)
-                sim_scores = sim_scores[1:6] 
+                # 6. Dapatkan indeks dan tampilkan bukunya
                 book_indices = [i[0] for i in sim_scores]
-                
-                # Dapatkan data buku berdasarkan index
-                result_df = books.iloc[book_indices][['book_title', 'book_author']].drop_duplicates().head(5)
+                result_df = data.iloc[book_indices][['book_title', 'book_author']]
                 result_df = result_df.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
                 
-            else:
-                # Logika jika bentuknya Pandas DataFrame (memiliki nama kolom judul buku)
-                index = cosine_sim_df.loc[:, selected_book].to_numpy().argpartition(range(-1, -6, -1))
-                closest = cosine_sim_df.columns[index[-1:-(5+2):-1]]
-                closest = closest.drop(selected_book, errors='ignore')
+                st.success("Berhasil menemukan buku serupa!")
+                st.table(result_df.reset_index(drop=True))
                 
-                result_df = pd.DataFrame({'book_title': closest}).merge(books[['book_title', 'book_author']], on='book_title').drop_duplicates().head(5)
-                result_df = result_df.rename(columns={'book_title': 'Judul Buku', 'book_author': 'Penulis'})
-            
-            st.success("Berhasil menemukan buku serupa!")
-            st.table(result_df.reset_index(drop=True))
-            
-        except Exception as e:
-            st.error(f"Terjadi kesalahan saat mencari buku: {e}")
-            st.info("Saran: Pastikan judul buku yang dipilih memiliki data yang sinkron dengan matriks kemiripan.")
-
+            except Exception as e:
+                st.error(f"Terjadi kesalahan saat mengkalkulasi kemiripan: {e}")
 # ==========================================
 # MENU 3: COLLABORATIVE FILTERING
 # ==========================================
