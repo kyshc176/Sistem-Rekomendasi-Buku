@@ -1,6 +1,8 @@
 # Laporan Proyek Machine Learning - Tika Putri Marsanti
 # Sistem Rekomendasi Buku Menggunakan Machine Learning
 
+🌐 Live App / Demo: [Aplikasi Sistem Rekomendasi Buku (Streamlit)](https://sistem-rekomendasi-bukuu.streamlit.app)
+
 ## Project Overview
 
 Di tengah era digital yang dipenuhi oleh informasi, tantangan dalam dunia literasi adalah menyajikan bacaan yang sesuai dengan preferensi masing-masing individu. Meskipun kemajuan toko buku daring dan layanan digital telah meningkatkan akses terhadap buku, banyaknya pilihan yang tersedia justru menyulitkan pembaca untuk menemukan bacaan yang sesuai minatnya. Akibatnya, proses pencarian menjadi tidak efisien dan membingungkan, yang bisa mengurangi minat baca seseorang.
